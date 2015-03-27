@@ -1,0 +1,2 @@
+# Libraries should not define a source, they should only define depedencies.
+# Projects (coreapp_customer) are allowed to specify a source.

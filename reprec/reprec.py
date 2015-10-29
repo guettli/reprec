@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, unicode_literals, print_function
+
 # (C) 2002-2015 Thomas Guettler http://www.thomas-guettler.de
 # Feedback is Welcome! (Even hints to typos)
 # This script is in the public domain
@@ -17,6 +19,10 @@
 #  - Unittest for dotall.
 #
 # Changes:
+#
+# 2015-10-29:
+#   - Refactoring, cleaned up code
+#   - add file_endings_to_ignore
 #
 # 2010-07-20:
 #   - Don't skip symbolic links if given on the commandline or with --files-from
@@ -55,8 +61,7 @@ import tempfile
 
 
 def usage():
-    print \
-        """Usage: %s
+    print("""Usage: %s
              [-p|--pattern] p
              [-i|--insert] i
              [-f|--filename regex]
@@ -129,17 +134,19 @@ def usage():
         process gets killed. If the process gets killed one FILE_RANDOMINTEGER
         may be left in the filesystem.
         """ % (
-            os.path.basename(sys.argv[0]),
-            os.path.basename(sys.argv[0]),
-            os.path.basename(sys.argv[0]),
-            os.path.basename(sys.argv[0]))
+        os.path.basename(sys.argv[0]),
+        os.path.basename(sys.argv[0]),
+        os.path.basename(sys.argv[0]),
+        os.path.basename(sys.argv[0])))
 
 
 def replace_recursive(dirname, pattern, text, filename_regex=None,
-                      no_regex=None, counter=None, verbose=False,
+                      no_regex=None, verbose=False,
                       dotall=False, print_lines=False, novcexclude=False, ask=False,
-                      files_from=None, ignorecase=False, ignore_lines=[], no_skip_message=False
+                      files_from=None, ignorecase=False, ignore_lines=None, no_skip_message=False
                       ):
+    if ignore_lines is None:
+        ignore_lines = []
     if ask and files_from:
         raise Exception("You can't use --ask and --files-from together since reading y/n from stdin is not possible")
     if dotall and ignore_lines:
@@ -152,12 +159,12 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
     if files_from:
         assert not dirname, dirname
         for line in files_from:
-            file = line.rstrip()
-            if os.path.isdir(file):
+            file_name = line.rstrip()
+            if os.path.isdir(file_name):
                 if not rr.no_skip_message:
-                    print "Skipping", file
+                    print("Skipping", file_name)
                 continue
-            rr.do(file, follow_symlink_files=[file])
+            rr.do(file_name, follow_symlink_files=[file_name])
         return rr.counter
 
     return rr.do(dirname, follow_symlink_files=dirname)
@@ -167,8 +174,10 @@ class ReplaceRecursive:
     def __init__(self, pattern, text, filename_regex=None,
                  no_regex=None, verbose=False,
                  dotall=False, print_lines=False, novcexclude=False, ask=False,
-                 ignorecase=False, ignore_lines=[], no_skip_message=False,
+                 ignorecase=False, ignore_lines=None, no_skip_message=False,
                  ):
+        if ignore_lines is None:
+            ignore_lines = []
         self.pattern = pattern
         self.text = text
         self.filename_regex = filename_regex
@@ -193,14 +202,16 @@ class ReplaceRecursive:
                 flags |= re.IGNORECASE
             try:
                 self.regex = re.compile(pattern, flags)
-            except re.error, e:
-                print "regular expression has syntax error: '%s': %s (do you want --no-regex ?)" % (
-                    pattern, str(e))
+            except re.error as e:
+                print("regular expression has syntax error: '%s': %s (do you want --no-regex ?)" % (
+                    pattern, str(e)))
                 sys.exit(3)
         else:
             self.regex = None
 
-    def do(self, dirname, follow_symlink_files=[]):
+    def do(self, dirname, follow_symlink_files=None):
+        if follow_symlink_files is None:
+            follow_symlink_files=[]
         if isinstance(dirname, (tuple, list)):
             for dir in dirname:
                 assert isinstance(dir, basestring), repr(dir)
@@ -208,7 +219,7 @@ class ReplaceRecursive:
             return self.counter
         if (not dirname in follow_symlink_files) and os.path.islink(dirname):
             if not self.no_skip_message:
-                print "Skipping symbolic link %s" % dirname
+                print("Skipping symbolic link %s" % dirname)
             return self.counter
         if os.path.isdir(dirname):
             dir_list = os.listdir(dirname)
@@ -224,21 +235,21 @@ class ReplaceRecursive:
                 file = os.path.join(dirname, file)
             if (not file in follow_symlink_files) and os.path.islink(file):
                 if not self.no_skip_message:
-                    print "Skipping symbolic link %s" % file
+                    print("Skipping symbolic link %s" % file)
                 continue
             if os.path.isdir(file):
                 if (not self.novcexclude) and os.path.basename(file) in [".svn", "CVS", ".git", ".hg", ".bzr", ".idea"]:
                     if not self.no_skip_message:
-                        print "Skipping", file
+                        print("Skipping", file)
                     continue
                 self.do(file)
             elif os.path.isfile(file):
                 self.do_file(file)
             else:
                 if not os.path.exists(file):
-                    print "%s does not exist" % file
+                    print("%s does not exist" % file)
                 else:
-                    print "Ignoring %s: No directory and not a file" % file
+                    print("Ignoring %s: No directory and not a file" % file)
 
         if self.counter["files"] != start_counter:
             self.counter["dirs"] += 1
@@ -253,7 +264,7 @@ class ReplaceRecursive:
             return
         fd = open(file_name, "rb")
         if self.verbose:
-            print "Opening %s" % file_name
+            print("Opening %s" % file_name)
         self.counter["files-checked"] += 1
         counter_start = self.counter["lines"]
         if self.dotall:
@@ -281,7 +292,7 @@ class ReplaceRecursive:
                     break
             if ignore_this_line:
                 if self.verbose:
-                    print "Ignoring %s line: %s" % (file_name, line.rstrip())
+                    print("Ignoring %s line: %s" % (file_name, line.rstrip()))
                 new_file_content.append(line)
                 continue
 
@@ -292,9 +303,9 @@ class ReplaceRecursive:
 
     def replace_one_line(self, line, file_name):
         if self.no_regex:
-            line_replaced = self.replace_one_line__no_regex(line, file_name)
+            line_replaced = self.replace_one_line__no_regex(line)
         else:
-            line_replaced = self.replace_one_line__regex(line, file_name)
+            line_replaced = self.replace_one_line__regex(line)
         assert line_replaced is not None
         if line == line_replaced:
             return line
@@ -306,13 +317,13 @@ class ReplaceRecursive:
                 file_name, line, file_name, line_replaced))
         return line_replaced
 
-    def replace_one_line__no_regex(self, line, file_name):
+    def replace_one_line__no_regex(self, line):
         return line.replace(self.pattern, self.text)
 
-    def replace_one_line__regex(self, line, file_name):
+    def replace_one_line__regex(self, line):
         return self.regex.sub(self.text, line)
 
-    def do_file__dot_all(self, fd, file_name):
+    def do_file__dot_all(self, fd):
         assert not self.ask
         content = fd.read()
         (new_file_content, n) = self.regex.subn(self.text, content)
@@ -334,40 +345,40 @@ class ReplaceRecursive:
         os.chmod(temp, mode)
         os.rename(temp, file_name)
         if self.verbose:
-            print "Changed %s lines in %s" % (
-                counter_now - counter_start, file_name)
+            print("Changed %s lines in %s" % (
+                counter_now - counter_start, file_name))
 
     file_endings_to_ignore = ['~', '.pyc', '.db']
 
-    def file_has_ending_to_ignore(self, file):
+    def file_has_ending_to_ignore(self, file_name):
         for ending in self.file_endings_to_ignore:
-            if file.endswith(ending):
+            if file_name.endswith(ending):
                 if not self.no_skip_message:
-                    print "Skipping", file
+                    print("Skipping", file_name)
                 return True
         return False
 
-    def doask(self, file, line, line_replaced):
+    def doask(self, file_name, line, line_replaced):
         if self.exit_after_this_file:
             return False
         if self.always_yes:
             return True
-        print "Replace in %s:" % (file)
-        print line
-        print "with:"
-        print line_replaced
+        print("Replace in %s:" % (file_name))
+        print(line)
+        print("with:")
+        print(line_replaced)
         if line.endswith('\n') and not line_replaced.endswith('\n'):
-            print "WARNING: Newline at the end of line was stripped!"
+            print("WARNING: Newline at the end of line was stripped!")
         while True:
             self.do_ask_one_time()
 
     def do_ask_one_time(self):
-        print "Please choose one action:"
-        print " y=yes"
-        print " n=No"
-        print " A=always yes (don't ask again)"
-        print " q=quit (save changes in this file)"
-        print " x=exit (exit now, discard changes in this file)"
+        print("Please choose one action:")
+        print(" y=yes")
+        print(" n=No")
+        print(" A=always yes (don't ask again)")
+        print(" q=quit (save changes in this file)")
+        print(" x=exit (exit now, discard changes in this file)")
         char = getch()
         if char == '\x1b':
             # Stupid things can happen:
@@ -375,14 +386,14 @@ class ReplaceRecursive:
             # --> all files get replaced!
 
             # Try to ignore Escape and following characters
-            print "You send Escape, ignoring input until next character",
+            print("You send Escape, ignoring input until next_char character", end=' ')
             sys.stdout.flush()
             while True:
-                next = getch()
-                if re.match(r'[a-zA-Z~]', next):
-                    print
+                next_char = getch()
+                if re.match(r'[a-zA-Z~]', next_char):
+                    print()
                     break
-                print "Ingoring %r" % (next),
+                print("Ingoring %r" % next_char, end=' ')
                 sys.stdout.flush()
             return
         if char in "yYjJ":
@@ -398,7 +409,7 @@ class ReplaceRecursive:
             # svn/cvs use 'a' for abort if you use an empty commit message
             self.always_yes = True
             return True
-        print "%r is not a valid action." % char
+        print("%r is not a valid action." % char)
 
 
 def main():
@@ -411,9 +422,9 @@ def main():
                                     "unittest", "novcexclude", "ask", "files-from=",
                                     "ignore=",
                                     "no-skip-message"])
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage()
-        print e
+        print(e)
         sys.exit(2)
     no_regex = None
     pattern = None
@@ -466,7 +477,7 @@ def main():
 
     if test:
         if len(opts) != 1 or args:
-            print "--test allows no other args."
+            print("--test allows no other args.")
             sys.exit(1)
         return unittest()
     if (not pattern) and (not text) and len(args) > 1:
@@ -475,11 +486,11 @@ def main():
         args = args[2:]
 
     if args and files_from:
-        print "Too many arguments (--files-from is set): %s" % args
+        print("Too many arguments (--files-from is set): %s" % args)
         sys.exit(1)
     for arg in args:
         if not os.path.exists(arg):
-            print '%s does not exist' % arg
+            print('%s does not exist' % arg)
             sys.exit(2)
 
     if None in [pattern, text]:
@@ -487,7 +498,7 @@ def main():
         sys.exit(2)
     if len(args) == 0 and not files_from:
         # reprec.py  .... $(find ...) --> don't use "." if the find command returns nothing.
-        print 'Use "." as last argument, if you want to replace recursive in the current directory.'
+        print('Use "." as last argument, if you want to replace recursive in the current directory.')
         sys.exit(2)
     counter = replace_recursive(args, pattern, text, filename_regex, no_regex,
                                 verbose=verbose, dotall=dotall,
@@ -498,7 +509,7 @@ def main():
     files = counter["files"]
     lines = counter["lines"]
     files_checked = counter["files-checked"]
-    print "Replaced %i directories %i files %i lines. %i files checked" % (dirs, files, lines, files_checked)
+    print("Replaced %i directories %i files %i lines. %i files checked" % (dirs, files, lines, files_checked))
 
 
 def diffdir(tempdir, shoulddir):
@@ -512,22 +523,22 @@ def diffdir(tempdir, shoulddir):
         raise Exception("diffdir(%s, %s): different files: %s %s" % (
             tempdir, shoulddir, tempfiles, shouldfiles))
     for filename in tempfiles:
-        file = os.path.join(tempdir, filename)
+        file_name = os.path.join(tempdir, filename)
         should = os.path.join(shoulddir, filename)
-        if os.path.isdir(file):
+        if os.path.isdir(file_name):
             assert os.path.isdir(should)
-            diffdir(file, should)
+            diffdir(file_name, should)
         else:
-            fd = open(file)
+            fd = open(file_name)
             data_is = fd.read()
             fd.close()
             fd = open(should)
             data_should = fd.read()
             fd.close()
             if data_is != data_should:
-                raise Exception("Files different: %s %s" % (file, should))
+                raise Exception("Files different: %s %s" % (file_name, should))
             else:
-                # print "Files are equal: %s %s" % (file, should)
+                # print "Files are equal: %s %s" % (file_name, should)
                 pass
 
 
@@ -536,8 +547,8 @@ def unittest_with_regex():
     os.mkdir(tempdir)
     data = "abcdefg\n"
     for i in range(10):
-        file = os.path.join(tempdir, str(i))
-        fd = open(file, "w")
+        file_name = os.path.join(tempdir, str(i))
+        fd = open(file_name, "w")
         fd.write(data)
         fd.close()
     counter = replace_recursive([tempdir], r"[cd]+", "12")
@@ -546,12 +557,12 @@ def unittest_with_regex():
     os.mkdir(shoulddir)
     data = "ab12efg\n"
     for i in range(10):
-        file = os.path.join(shoulddir, str(i))
-        fd = open(file, "w")
+        file_name = os.path.join(shoulddir, str(i))
+        fd = open(file_name, "w")
         fd.write(data)
         fd.close()
     diffdir(tempdir, shoulddir)
-    print "Unittest regex: OK"
+    print("Unittest regex: OK")
     shutil.rmtree(tempdir)
     shutil.rmtree(shoulddir)
 
@@ -561,8 +572,8 @@ def unittest_no_regex():
     os.mkdir(tempdir)
     data = "abcdefg\n"
     for i in range(10):
-        file = os.path.join(tempdir, str(i))
-        fd = open(file, "w")
+        file_name = os.path.join(tempdir, str(i))
+        fd = open(file_name, "w")
         fd.write(data)
         fd.close()
     counter = replace_recursive([tempdir], "cd", "12", no_regex=True)
@@ -571,12 +582,12 @@ def unittest_no_regex():
     os.mkdir(shoulddir)
     data = "ab12efg\n"
     for i in range(10):
-        file = os.path.join(shoulddir, str(i))
-        fd = open(file, "w")
+        file_name = os.path.join(shoulddir, str(i))
+        fd = open(file_name, "w")
         fd.write(data)
         fd.close()
     diffdir(tempdir, shoulddir)
-    print "Unittest no_regex: OK"
+    print("Unittest no_regex: OK")
     shutil.rmtree(tempdir)
     shutil.rmtree(shoulddir)
 
@@ -585,7 +596,7 @@ def unittest_file_has_ending_to_ignore():
     reprec = ReplaceRecursive('pattern', 'insert')
     assert not reprec.file_has_ending_to_ignore('foo.py')
     assert reprec.file_has_ending_to_ignore('foo.pyc')
-    print 'unittest_file_has_ending_to_ignore: OK'
+    print('unittest_file_has_ending_to_ignore: OK')
 
 
 def unittest():

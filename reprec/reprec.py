@@ -153,7 +153,7 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
         for line in files_from:
             file=line.rstrip()
             if os.path.isdir(file):
-                if not self.no_skip_message:
+                if not rr.no_skip_message:
                     print "Skipping", file
                 continue
             rr.do(file, follow_symlink_files=[file])
@@ -231,78 +231,7 @@ class ReplaceRecursive:
                     continue
                 self.do(file)
             elif os.path.isfile(file):
-                if self.file_has_ending_to_ignore(file):
-                    continue
-                if self.filename_regex and not re.match(self.filename_regex,
-                                                        file):
-                    continue
-                fd=open(file, "rb")
-                if self.verbose:
-                    print "Opening %s" % file
-                self.counter["files-checked"]+=1
-                counter_start=self.counter["lines"]
-                out=[]
-                if not self.dotall:
-                    while True:
-                        line=fd.readline()
-                        if not line:
-                            break
-                        ignore_this_line=False
-                        for ignore_line in self.ignore_lines:
-                            if ignore_line.search(line):
-                                ignore_this_line=True
-                                break
-                        if ignore_this_line:
-                            if self.verbose:
-                                print "Ignoring %s line: %s" % (file, line.rstrip())
-                            out.append(line)
-                            continue
-                        if self.no_regex:
-                            line_replaced=line.replace(self.pattern, self.text)
-                            if line_replaced!=line:
-                                if self.ask and (not self.doask(file, line, line_replaced)):
-                                    line_replaced=line
-                                else:
-                                    self.counter["lines"]+=1
-                                    if self.print_lines:
-                                        sys.stdout.write("%s old: %s%s new: %s" % (
-                                            file, line, file, line_replaced))
-                        else:
-                            (line_replaced, n)=self.regex.subn(self.text, line)
-                            if n:
-                                if self.ask and (not self.doask(file, line, line_replaced)):
-                                    line_replaced=line
-                                else:
-                                    self.counter["lines"]+=1
-                                    if self.print_lines:
-                                        sys.stdout.write("%s old: %s%s new: %s" % (
-                                            file, line, file, line_replaced))
-                        out.append(line_replaced)
-                    out=''.join(out)
-                else: # if self.dotall
-                    assert not self.ask
-                    content=fd.read()
-                    (out, n)=self.regex.subn(self.text, content)
-                    if n:
-                        self.counter["lines"]+=n
-                fd.close()
-                counter_now=self.counter["lines"]
-                if counter_now!=counter_start:
-                    #Some lines where changed
-                    self.counter["files"]+=1
-                    temp="%s_%s" % (file, random.randint(100000, 999999))
-                    fd=open(temp, "wb")
-                    fd.write(out)
-                    fd.close()
-                    # os.rename: single system call, so no
-                    # half written files will exist if to process gets
-                    # killed.
-                    mode=os.stat(file).st_mode
-                    os.chmod(temp, mode)
-                    os.rename(temp, file)
-                    if self.verbose:
-                        print "Changed %s lines in %s" % (
-                            counter_now - counter_start, file)
+                self.do_file(file)
             else:
                 if not os.path.exists(file):
                     print "%s does not exist" % file
@@ -314,6 +243,98 @@ class ReplaceRecursive:
 
         return self.counter
 
+
+    def do_file(self, file_name):
+        if self.file_has_ending_to_ignore(file_name):
+            return
+        if self.filename_regex and not re.match(self.filename_regex,
+                                                file_name):
+            return
+        fd=open(file_name, "rb")
+        if self.verbose:
+            print "Opening %s" % file_name
+        self.counter["files-checked"]+=1
+        counter_start=self.counter["lines"]
+        if self.dotall:
+            new_file_content=self.do_file__dot_all(fd, file_name)
+        else:
+            new_file_content=self.do_file__not_dot_all(fd, file_name)
+        fd.close()
+
+        if self.counter["lines"]==counter_start:
+            # no changes
+            return
+
+        self.update_file(file_name, new_file_content, counter_start)
+
+    def do_file__not_dot_all(self, fd, file_name):
+        new_file_content=[]
+        while True:
+            line=fd.readline()
+            if not line:
+                break
+            ignore_this_line=False
+            for ignore_line in self.ignore_lines:
+                if ignore_line.search(line):
+                    ignore_this_line=True
+                    break
+            if ignore_this_line:
+                if self.verbose:
+                    print "Ignoring %s line: %s" % (file_name, line.rstrip())
+                new_file_content.append(line)
+                continue
+
+            line_replaced=self.replace_one_line(line, file_name)
+            new_file_content.append(line_replaced)
+
+        return ''.join(new_file_content)
+
+    def replace_one_line(self, line, file_name):
+        if self.no_regex:
+            line_replaced=self.replace_one_line__no_regex(line, file_name)
+        else:
+            line_replaced=self.replace_one_line__regex(line, file_name)
+        assert line_replaced is not None
+        if line==line_replaced:
+            return line
+        if self.ask and (not self.doask(file_name, line, line_replaced)):
+            return line
+        self.counter["lines"]+=1
+        if self.print_lines:
+            sys.stdout.write("%s old: %s%s new: %s" % (
+                file_name, line, file_name, line_replaced))
+        return line_replaced
+
+    def replace_one_line__no_regex(self, line, file_name):
+        return line.replace(self.pattern, self.text)
+
+    def replace_one_line__regex(self, line, file_name):
+        return self.regex.sub(self.text, line)
+
+    def do_file__dot_all(self, fd, file_name):
+        assert not self.ask
+        content=fd.read()
+        (new_file_content, n)=self.regex.subn(self.text, content)
+        if n:
+            self.counter["lines"]+=n
+        return new_file_content
+
+    def update_file(self, file_name, out, counter_start):
+        counter_now=self.counter["lines"]
+        self.counter["files"]+=1
+        temp="%s_%s" % (file_name, random.randint(100000, 999999))
+        fd=open(temp, "wb")
+        fd.write(out)
+        fd.close()
+        # os.rename: single system call, so no
+        # half written files will exist if to process gets
+        # killed.
+        mode=os.stat(file_name).st_mode
+        os.chmod(temp, mode)
+        os.rename(temp, file_name)
+        if self.verbose:
+            print "Changed %s lines in %s" % (
+                counter_now - counter_start, file_name)
 
     file_endings_to_ignore=['~', '.pyc', '.db']
 
@@ -327,7 +348,6 @@ class ReplaceRecursive:
 
     def doask(self, file, line, line_replaced):
         if self.exit_after_this_file:
-            #print "Default no"
             return False
         if self.always_yes:
             return True
@@ -338,43 +358,46 @@ class ReplaceRecursive:
         if line.endswith('\n') and not line_replaced.endswith('\n'):
             print "WARNING: Newline at the end of line was stripped!"
         while True:
-            print "Please choose one action:"
-            print " y=yes"
-            print " n=No"
-            print " A=always yes (don't ask again)"
-            print " q=quit (save changes in this file)"
-            print " x=exit (exit now, discard changes in this file)"
-            char=getch()
-            if char=='\x1b':
-                # Stupid things can happen:
-                # Cursor-Up sends ESC [ A
-                # --> all files get replaced!
+            self.do_ask_one_time()
 
-                # Try to ignore Escape and following characters
-                print "You send Escape, ignoring input until next character",
+    def do_ask_one_time(self):
+        print "Please choose one action:"
+        print " y=yes"
+        print " n=No"
+        print " A=always yes (don't ask again)"
+        print " q=quit (save changes in this file)"
+        print " x=exit (exit now, discard changes in this file)"
+        char=getch()
+        if char=='\x1b':
+            # Stupid things can happen:
+            # Cursor-Up sends ESC [ A
+            # --> all files get replaced!
+
+            # Try to ignore Escape and following characters
+            print "You send Escape, ignoring input until next character",
+            sys.stdout.flush()
+            while True:
+                next=getch()
+                if re.match(r'[a-zA-Z~]', next):
+                    print
+                    break
+                print "Ingoring %r" % (next),
                 sys.stdout.flush()
-                while True:
-                    next=getch()
-                    if re.match(r'[a-zA-Z~]', next):
-                        print
-                        break
-                    print "Ingoring %r" % (next),
-                    sys.stdout.flush()
-                continue
-            if char in "yYjJ":
-                return True
-            elif char in "nN":
-                return False
-            elif char in "qQ":
-                self.exit_after_this_file=True
-                return False
-            elif char in "xX":
-                sys.exit(1)
-            elif char in "A":
-                # svn/cvs use 'a' for abort if you use an empty commit message
-                self.always_yes=True
-                return True
-            print "%r is not a valid action." % char
+            return
+        if char in "yYjJ":
+            return True
+        elif char in "nN":
+            return False
+        elif char in "qQ":
+            self.exit_after_this_file=True
+            return False
+        elif char in "xX":
+            sys.exit(1)
+        elif char in "A":
+            # svn/cvs use 'a' for abort if you use an empty commit message
+            self.always_yes=True
+            return True
+        print "%r is not a valid action." % char
 
 def main():
     try:
@@ -563,7 +586,7 @@ def unittest():
     unittest_no_regex()
     unittest_file_has_ending_to_ignore()
 
-### Copied from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/134892
+### copy from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/134892
 class _Getch:
     """Gets a single character from standard input.  Does not echo to the
 screen."""
@@ -598,7 +621,7 @@ class _GetchWindows:
 
 
 getch = _Getch()
-### Ende Kopie
+### Ende copy
 
 if __name__ == '__main__':
     main()

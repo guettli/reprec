@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#(C) 2002-2008 Thomas Guettler http://www.thomas-guettler.de
+#(C) 2002-2015 Thomas Guettler http://www.thomas-guettler.de
 #Feedback is Welcome! (Even hints to typos)
 #This script is in the public domain
 #
@@ -52,6 +52,7 @@ import getopt
 import random
 import shutil
 import tempfile
+
 
 def usage():
     print \
@@ -230,16 +231,10 @@ class ReplaceRecursive:
                     continue
                 self.do(file)
             elif os.path.isfile(file):
-                if file.endswith(".pyc"):
+                if self.file_has_ending_to_ignore(file):
                     continue
                 if self.filename_regex and not re.match(self.filename_regex,
                                                         file):
-                    continue
-                if file.endswith(".pyc"):
-                    continue
-                if file.endswith('~'):
-                    if not self.no_skip_message:
-                        print "Skipping", file
                     continue
                 fd=open(file, "rb")
                 if self.verbose:
@@ -318,6 +313,17 @@ class ReplaceRecursive:
             self.counter["dirs"]+=1
 
         return self.counter
+
+
+    file_endings_to_ignore=['~', '.pyc', '.db']
+
+    def file_has_ending_to_ignore(self, file):
+        for ending in self.file_endings_to_ignore:
+            if file.endswith(ending):
+                if not self.no_skip_message:
+                    print "Skipping", file
+                return True
+        return False
 
     def doask(self, file, line, line_replaced):
         if self.exit_after_this_file:
@@ -497,7 +503,32 @@ def diffdir(tempdir, shoulddir):
                 #print "Files are equal: %s %s" % (file, should)
                 pass
 
-def unittest():
+def unittest_with_regex():
+    tempdir=tempfile.mktemp(prefix='reprec_unittest_dir')
+    os.mkdir(tempdir)
+    data="abcdefg\n"
+    for i in range(10):
+        file=os.path.join(tempdir, str(i))
+        fd=open(file, "w")
+        fd.write(data)
+        fd.close()
+    counter=replace_recursive([tempdir], r"[cd]+", "12")
+    assert counter=={'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}
+    shoulddir=tempfile.mktemp(prefix='reprec_unittest_should2')
+    os.mkdir(shoulddir)
+    data="ab12efg\n"
+    for i in range(10):
+        file=os.path.join(shoulddir, str(i))
+        fd=open(file, "w")
+        fd.write(data)
+        fd.close()
+    diffdir(tempdir, shoulddir)
+    print "Unittest regex: OK"
+    shutil.rmtree(tempdir)
+    shutil.rmtree(shoulddir)
+
+
+def unittest_no_regex():
     tempdir=tempfile.mktemp(prefix='reprec_unittest')
     os.mkdir(tempdir)
     data="abcdefg\n"
@@ -521,28 +552,16 @@ def unittest():
     shutil.rmtree(tempdir)
     shutil.rmtree(shoulddir)
 
-    tempdir=tempfile.mktemp(prefix='reprec_unittest_dir')
-    os.mkdir(tempdir)
-    data="abcdefg\n"
-    for i in range(10):
-        file=os.path.join(tempdir, str(i))
-        fd=open(file, "w")
-        fd.write(data)
-        fd.close()
-    counter=replace_recursive([tempdir], r"[cd]+", "12")
-    assert counter=={'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}
-    shoulddir=tempfile.mktemp(prefix='reprec_unittest_should2')
-    os.mkdir(shoulddir)
-    data="ab12efg\n"
-    for i in range(10):
-        file=os.path.join(shoulddir, str(i))
-        fd=open(file, "w")
-        fd.write(data)
-        fd.close()
-    diffdir(tempdir, shoulddir)
-    print "Unittest regex: OK"
-    shutil.rmtree(tempdir)
-    shutil.rmtree(shoulddir)
+def unittest_file_has_ending_to_ignore():
+    reprec=ReplaceRecursive('pattern', 'insert')
+    assert not reprec.file_has_ending_to_ignore('foo.py')
+    assert reprec.file_has_ending_to_ignore('foo.pyc')
+    print 'unittest_file_has_ending_to_ignore: OK'
+
+def unittest():
+    unittest_with_regex()
+    unittest_no_regex()
+    unittest_file_has_ending_to_ignore()
 
 ### Copied from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/134892
 class _Getch:

@@ -213,9 +213,9 @@ class ReplaceRecursive:
         if follow_symlink_files is None:
             follow_symlink_files=[]
         if isinstance(dirname, (tuple, list)):
-            for dir in dirname:
-                assert isinstance(dir, basestring), repr(dir)
-                self.do(dir)
+            for dir_name in dirname:
+                assert isinstance(dir_name, basestring), repr(dir_name)
+                self.do(dir_name)
             return self.counter
         if (not dirname in follow_symlink_files) and os.path.islink(dirname):
             if not self.no_skip_message:
@@ -228,28 +228,28 @@ class ReplaceRecursive:
             dir_list = [dirname]
             isdir = False
         start_counter = self.counter["files"]
-        for file in dir_list:
+        for file_name in dir_list:
             if self.exit_after_this_file:
                 break
             if isdir:
-                file = os.path.join(dirname, file)
-            if (not file in follow_symlink_files) and os.path.islink(file):
+                file_name = os.path.join(dirname, file_name)
+            if (not file_name in follow_symlink_files) and os.path.islink(file_name):
                 if not self.no_skip_message:
-                    print("Skipping symbolic link %s" % file)
+                    print("Skipping symbolic link %s" % file_name)
                 continue
-            if os.path.isdir(file):
-                if (not self.novcexclude) and os.path.basename(file) in [".svn", "CVS", ".git", ".hg", ".bzr", ".idea"]:
+            if os.path.isdir(file_name):
+                if (not self.novcexclude) and os.path.basename(file_name) in [".svn", "CVS", ".git", ".hg", ".bzr", ".idea"]:
                     if not self.no_skip_message:
-                        print("Skipping", file)
+                        print("Skipping", file_name)
                     continue
-                self.do(file)
-            elif os.path.isfile(file):
-                self.do_file(file)
+                self.do(file_name)
+            elif os.path.isfile(file_name):
+                self.do_file(file_name)
             else:
-                if not os.path.exists(file):
-                    print("%s does not exist" % file)
+                if not os.path.exists(file_name):
+                    print("%s does not exist" % file_name)
                 else:
-                    print("Ignoring %s: No directory and not a file" % file)
+                    print("Ignoring %s: No directory and not a file_name" % file_name)
 
         if self.counter["files"] != start_counter:
             self.counter["dirs"] += 1
@@ -268,7 +268,7 @@ class ReplaceRecursive:
         self.counter["files-checked"] += 1
         counter_start = self.counter["lines"]
         if self.dotall:
-            new_file_content = self.do_file__dot_all(fd, file_name)
+            new_file_content = self.do_file__dot_all(fd)
         else:
             new_file_content = self.do_file__not_dot_all(fd, file_name)
         fd.close()
@@ -363,7 +363,7 @@ class ReplaceRecursive:
             return False
         if self.always_yes:
             return True
-        print("Replace in %s:" % (file_name))
+        print("Replace in %s:" % file_name)
         print(line)
         print("with:")
         print(line_replaced)

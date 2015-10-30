@@ -51,6 +51,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 #   - Option 'print-lines'
 
 # Python Imports
+import codecs
 import os
 import re
 import sys
@@ -179,7 +180,7 @@ class ReplaceRecursive:
         if ignore_lines is None:
             ignore_lines = []
         self.pattern = pattern
-        self.text = text
+        self.text = bytes(text)
         self.filename_regex = filename_regex
         self.no_regex = no_regex
         self.verbose = verbose
@@ -262,16 +263,15 @@ class ReplaceRecursive:
         if self.filename_regex and not re.match(self.filename_regex,
                                                 file_name):
             return
-        fd = open(file_name, 'rb')
         if self.verbose:
             print('Opening %s' % file_name)
         self.counter['files-checked'] += 1
         counter_start = self.counter['lines']
-        if self.dotall:
-            new_file_content = self.do_file__dot_all(fd)
-        else:
-            new_file_content = self.do_file__not_dot_all(fd, file_name)
-        fd.close()
+        with open(file_name, 'rb') as fd:
+            if self.dotall:
+                new_file_content = self.do_file__dot_all(fd)
+            else:
+                new_file_content = self.do_file__not_dot_all(fd, file_name)
 
         if self.counter['lines'] == counter_start:
             # no changes
@@ -299,7 +299,7 @@ class ReplaceRecursive:
             line_replaced = self.replace_one_line(line, file_name)
             new_file_content.append(line_replaced)
 
-        return ''.join(new_file_content)
+        return b''.join(new_file_content)
 
     def replace_one_line(self, line, file_name):
         if self.no_regex:
@@ -335,9 +335,8 @@ class ReplaceRecursive:
         counter_now = self.counter['lines']
         self.counter['files'] += 1
         temp = '%s_%s' % (file_name, random.randint(100000, 999999))
-        fd = open(temp, 'wb')
-        fd.write(out)
-        fd.close()
+        with open(temp, 'wb') as fd:
+            fd.write(out)
         # os.rename: single system call, so no
         # half written files will exist if to process gets
         # killed.
@@ -529,12 +528,8 @@ def diffdir(tempdir, shoulddir):
             assert os.path.isdir(should)
             diffdir(file_name, should)
         else:
-            fd = open(file_name)
-            data_is = fd.read()
-            fd.close()
-            fd = open(should)
-            data_should = fd.read()
-            fd.close()
+            data_is = open(file_name).read()
+            data_should = open(should).read()
             if data_is != data_should:
                 raise Exception('Files different: %s %s' % (file_name, should))
             else:
@@ -545,22 +540,20 @@ def diffdir(tempdir, shoulddir):
 def unittest_with_regex():
     tempdir = tempfile.mktemp(prefix='reprec_unittest_dir')
     os.mkdir(tempdir)
-    data = 'abcdefg\n'
+    data = 'abcdefg ü\n'
     for i in range(10):
         file_name = os.path.join(tempdir, str(i))
-        fd = open(file_name, 'w')
-        fd.write(data)
-        fd.close()
+        with codecs.open(file_name, 'w', 'utf8') as fd:
+            fd.write(data)
     counter = replace_recursive([tempdir], r'[cd]+', '12')
     assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}
     shoulddir = tempfile.mktemp(prefix='reprec_unittest_should2')
     os.mkdir(shoulddir)
-    data = 'ab12efg\n'
+    data = 'ab12efg ü\n'
     for i in range(10):
         file_name = os.path.join(shoulddir, str(i))
-        fd = open(file_name, 'w')
-        fd.write(data)
-        fd.close()
+        with codecs.open(file_name, 'w', 'utf8') as fd:
+            fd.write(data)
     diffdir(tempdir, shoulddir)
     print('Unittest regex: OK')
     shutil.rmtree(tempdir)
@@ -573,9 +566,8 @@ def unittest_no_regex():
     data = 'abcdefg\n'
     for i in range(10):
         file_name = os.path.join(tempdir, str(i))
-        fd = open(file_name, 'w')
-        fd.write(data)
-        fd.close()
+        with open(file_name, 'w') as fd:
+            fd.write(data)
     counter = replace_recursive([tempdir], 'cd', '12', no_regex=True)
     assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}, counter
     shoulddir = tempfile.mktemp(prefix='reprec_unittest_should')
@@ -583,9 +575,8 @@ def unittest_no_regex():
     data = 'ab12efg\n'
     for i in range(10):
         file_name = os.path.join(shoulddir, str(i))
-        fd = open(file_name, 'w')
-        fd.write(data)
-        fd.close()
+        with open(file_name, 'w') as fd:
+            fd.write(data)
     diffdir(tempdir, shoulddir)
     print('Unittest no_regex: OK')
     shutil.rmtree(tempdir)

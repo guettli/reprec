@@ -71,7 +71,7 @@ def usage():
              [--print-lines]
              [--dotall]
              [--ignorecase]
-             [--unittest]
+             [--test]
              [--novcexclude]
              [--files-from file|-]
              [--ignore regex]
@@ -100,7 +100,7 @@ def usage():
 
         ignorecase:  ...
 
-        unittest:    Run the unittest. No other arguments are allowed.
+        test:    Run the test. No other arguments are allowed.
 
         novcexclude: Don't exclude the directories called '.svn' or 'CVS'.
                      By default they get ignored.
@@ -419,7 +419,7 @@ def main():
                                     "verbose", "print-lines",
                                     "filename=",
                                     "dotall", "ignorecase",
-                                    "unittest", "novcexclude", "ask", "files-from=",
+                                    "test", "novcexclude", "ask", "files-from=",
                                     "ignore=",
                                     "no-skip-message"])
     except getopt.GetoptError as e:
@@ -455,7 +455,7 @@ def main():
             dotall = True
         elif opt == "--ignorecase":
             ignorecase = True
-        elif opt == "--unittest":
+        elif opt == "--test":
             test = True
         elif opt == "--print-lines":
             print_lines = True

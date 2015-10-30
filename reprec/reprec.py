@@ -179,8 +179,8 @@ class ReplaceRecursive:
                  ):
         if ignore_lines is None:
             ignore_lines = []
-        self.pattern = pattern
-        self.text = bytes(text)
+        self.pattern = self.str_to_bytes(pattern)
+        self.text = self.str_to_bytes(text)
         self.filename_regex = filename_regex
         self.no_regex = no_regex
         self.verbose = verbose
@@ -210,6 +210,11 @@ class ReplaceRecursive:
         else:
             self.regex = None
 
+    def str_to_bytes(self, my_string):
+        try:
+            return bytes(my_string)
+        except UnicodeError as exc:
+            raise UnicodeError('Failed to convert to bytes: %r. Exception: %s' % (my_string, exc))
     def do(self, dirname, follow_symlink_files=None):
         if follow_symlink_files is None:
             follow_symlink_files=[]
@@ -540,20 +545,20 @@ def diffdir(tempdir, shoulddir):
 def unittest_with_regex():
     tempdir = tempfile.mktemp(prefix='reprec_unittest_dir')
     os.mkdir(tempdir)
-    data = 'abcdefg ü\n'
+    data_start = 'abcdefg ü\n'
     for i in range(10):
         file_name = os.path.join(tempdir, str(i))
         with codecs.open(file_name, 'w', 'utf8') as fd:
-            fd.write(data)
+            fd.write(data_start)
     counter = replace_recursive([tempdir], r'[cd]+', '12')
     assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}
     shoulddir = tempfile.mktemp(prefix='reprec_unittest_should2')
     os.mkdir(shoulddir)
-    data = 'ab12efg ü\n'
+    result_should = 'ab12efg ü\n'
     for i in range(10):
         file_name = os.path.join(shoulddir, str(i))
         with codecs.open(file_name, 'w', 'utf8') as fd:
-            fd.write(data)
+            fd.write(result_should)
     diffdir(tempdir, shoulddir)
     print('Unittest regex: OK')
     shutil.rmtree(tempdir)
@@ -563,20 +568,20 @@ def unittest_with_regex():
 def unittest_no_regex():
     tempdir = tempfile.mktemp(prefix='reprec_unittest')
     os.mkdir(tempdir)
-    data = 'abcdefg\n'
+    data_start = 'abcdefg ü\n'
     for i in range(10):
         file_name = os.path.join(tempdir, str(i))
-        with open(file_name, 'w') as fd:
-            fd.write(data)
-    counter = replace_recursive([tempdir], 'cd', '12', no_regex=True)
+        with codecs.open(file_name, 'w', 'utf8') as fd:
+            fd.write(data_start)
+    counter = replace_recursive([tempdir], b'ü', b'ö', no_regex=True)
     assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}, counter
     shoulddir = tempfile.mktemp(prefix='reprec_unittest_should')
     os.mkdir(shoulddir)
-    data = 'ab12efg\n'
+    result_should = 'abcdefg ö\n'
     for i in range(10):
         file_name = os.path.join(shoulddir, str(i))
-        with open(file_name, 'w') as fd:
-            fd.write(data)
+        with codecs.open(file_name, 'w', 'utf8') as fd:
+            fd.write(result_should)
     diffdir(tempdir, shoulddir)
     print('Unittest no_regex: OK')
     shutil.rmtree(tempdir)

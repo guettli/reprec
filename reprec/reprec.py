@@ -3,52 +3,8 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 # (C) 2002-2015 Thomas Guettler http://www.thomas-guettler.de
-# Feedback is Welcome! (Even hints to typos)
-# This script is in the public domain
-#
-# Recursively replace strings in files
-#
-# Other Solution: rpl http://www.laffeycomputer.com/rpl.html
-#
-# Thanks to Reinhard Wobst for some hints.
-
-# TODO:
-#  - --verbose-lines: Print each changed line: old + new
-#  - If root, new file is owned by root --> chown
-#  - change ugly counter['lines'] to counter.lines
-#  - Unittest for dotall.
-#
-# Changes:
-#
-# 2015-10-29:
-#   - Refactoring, cleaned up code
-#   - add file_endings_to_ignore
-#
-# 2010-07-20:
-#   - Don't skip symbolic links if given on the commandline or with --files-from
-#
-# 2008-08-01:
-#   - Ignore lines. Option --ignore was added
-#   - --ask: Handle Escape Character (Cursor up resulted in A (replace all) before)
-#   - Warning if Newline at the end gets lost during replacement (only for --ask)
-#
-# 2007-04-05:
-#   - Check for too many arguments, if --files-from is used.
-#
-# 2007-02-15:
-#   - Added --files-from
-#   - True and False instead of 1 and 0
-#
-# 2006-09-27:
-#   - New option: --ask (interactive)
-#   - use chmod() to set the access-mode like the old file (ie execute bit)
-#
-# 2006-06-28:
-#   - '.svn' and 'CVS' are ignored by default. Added Option --novcexclude
-#
-# 2004-11-03:
-#   - Use a class instead of passing options again and again.
-#   - Option 'print-lines'
+# Feedback is welcome! (Even hints to typos)
+# Please use this URL for feedback: https://github.com/guettli/reprec
 
 # Python Imports
 import codecs

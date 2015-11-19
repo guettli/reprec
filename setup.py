@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='reprec',
-    version='2015.1',
+    version='2015.3',
     license='BSD',
     long_description=open('README.txt').read(),
     packages=setuptools.find_packages(),

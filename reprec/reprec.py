@@ -587,7 +587,8 @@ class _GetchUnix:
 
 class _GetchWindows:
     def __init__(self):
-        pass
+        # noinspection PyUnresolvedReferences
+        import msvcrt
 
     def __call__(self):
         import msvcrt

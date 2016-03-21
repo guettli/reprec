@@ -330,7 +330,8 @@ class ReplaceRecursive:
         if line.endswith('\n') and not line_replaced.endswith('\n'):
             print('WARNING: Newline at the end of line was stripped!')
         while True:
-            self.do_ask_one_time()
+            if self.do_ask_one_time():
+                break
 
     def do_ask_one_time(self):
         print('Please choose one action:')

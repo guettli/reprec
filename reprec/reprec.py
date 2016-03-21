@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-# (C) 2002-2015 Thomas Guettler http://www.thomas-guettler.de
+# (C) 2002-2016 Thomas Guettler http://www.thomas-guettler.de
 # Feedback is welcome! (Even hints to typos)
 # Please use this URL for feedback: https://github.com/guettli/reprec
+# This is open source software using the MIT Licence: http://choosealicense.com/licenses/mit/
 
 # Python Imports
 import codecs
@@ -330,8 +331,10 @@ class ReplaceRecursive:
         if line.endswith('\n') and not line_replaced.endswith('\n'):
             print('WARNING: Newline at the end of line was stripped!')
         while True:
-            if self.do_ask_one_time():
-                break
+            user_input=self.do_ask_one_time()
+            if user_input is None:
+                continue
+            return user_input
 
     def do_ask_one_time(self):
         print('Please choose one action:')

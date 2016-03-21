@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='reprec',
-    version='2016.0',
+    version='2016.2',
     license='BSD',
     url='https://github.com/guettli/reprec',
     long_description=open('README.rst').read(),

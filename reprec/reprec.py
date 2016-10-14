@@ -7,7 +7,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 # Please use this URL for feedback: https://github.com/guettli/reprec
 # This is open source software using the MIT Licence: http://choosealicense.com/licenses/mit/
 
-# Python Imports
 import codecs
 import os
 import re

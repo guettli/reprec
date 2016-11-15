@@ -12,7 +12,8 @@ setuptools.setup(
 
     entry_points={
         'console_scripts': [  
-		'reprec=reprec.reprec:main'
+		    'reprec=reprec.reprec:main',
+            'setops=setops:main',
         ],
     }
 )

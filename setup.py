@@ -1,6 +1,5 @@
 import setuptools
 
-
 setuptools.setup(
     name='reprec',
     version='2016.2',
@@ -11,8 +10,8 @@ setuptools.setup(
     include_package_data=True,
 
     entry_points={
-        'console_scripts': [  
-		    'reprec=reprec.reprec:main',
+        'console_scripts': [
+            'reprec=reprec.reprec:main',
             'setops=setops:main',
         ],
     }

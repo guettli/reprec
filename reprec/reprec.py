@@ -2,18 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-# (C) 2002-2016 Thomas Guettler http://www.thomas-guettler.de
-# Feedback is welcome! (Even hints to typos)
-# Please use this URL for feedback: https://github.com/guettli/reprec
-# This is open source software using the MIT Licence: http://choosealicense.com/licenses/mit/
-
 import codecs
-import os
-import re
-import sys
 import getopt
+import os
 import random
+import re
 import shutil
+import sys
 import tempfile
 
 
@@ -171,9 +166,10 @@ class ReplaceRecursive:
             return bytes(my_string)
         except UnicodeError as exc:
             raise UnicodeError('Failed to convert to bytes: %r. Exception: %s' % (my_string, exc))
+
     def do(self, dirname, follow_symlink_files=None):
         if follow_symlink_files is None:
-            follow_symlink_files=[]
+            follow_symlink_files = []
         if isinstance(dirname, (tuple, list)):
             for dir_name in dirname:
                 assert isinstance(dir_name, basestring), repr(dir_name)
@@ -200,7 +196,8 @@ class ReplaceRecursive:
                     print('Skipping symbolic link %s' % file_name)
                 continue
             if os.path.isdir(file_name):
-                if (not self.novcexclude) and os.path.basename(file_name) in ['.svn', 'CVS', '.git', '.hg', '.bzr', '.idea']:
+                if (not self.novcexclude) and os.path.basename(file_name) in ['.svn', 'CVS', '.git', '.hg', '.bzr',
+                                                                              '.idea']:
                     if not self.no_skip_message:
                         print('Skipping', file_name)
                     continue
@@ -330,7 +327,7 @@ class ReplaceRecursive:
         if line.endswith('\n') and not line_replaced.endswith('\n'):
             print('WARNING: Newline at the end of line was stripped!')
         while True:
-            user_input=self.do_ask_one_time()
+            user_input = self.do_ask_one_time()
             if user_input is None:
                 continue
             return user_input

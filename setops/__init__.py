@@ -41,9 +41,18 @@ def string_to_operator(string_value):
             return operator
     raise argparse.ArgumentTypeError('Unknown operator: %r' % string_value)
 
+def description():
+    return 'Operators: \n%s' % ('\n'.join(['  %s Aliases: %s' % (
+        operator.name_of_set_operation,
+
+
+                                        ' '.join(operator.aliases)) for operator in operators]))
+
+
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=description(),
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('set1', type=string_to_set)
     parser.add_argument('operator', type=string_to_operator)
     parser.add_argument('set2', type=string_to_set)

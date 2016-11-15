@@ -25,9 +25,9 @@ class OperatorReturningBool(Operator):
 
 
 operators = [
-    #OperatorReturningBool('isdisjoint', []),
-    #OperatorReturningBool('issubset', []),
-    #OperatorReturningBool('issuperset', []),
+    # OperatorReturningBool('isdisjoint', []),
+    # OperatorReturningBool('issubset', []),
+    # OperatorReturningBool('issuperset', []),
     OperatorReturningSet('union', ['|', '+', 'or']),
     OperatorReturningSet('intersection', ['&', 'and']),
     OperatorReturningSet('difference', ['-', 'minus']),

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import io
+
 import codecs
 import getopt
 import os
@@ -10,7 +12,6 @@ import re
 import shutil
 import sys
 import tempfile
-
 
 def usage():
     print('''Usage: %s
@@ -130,8 +131,8 @@ class ReplaceRecursive:
                  ):
         if ignore_lines is None:
             ignore_lines = []
-        self.pattern = self.str_to_bytes(pattern)
-        self.text = self.str_to_bytes(text)
+        self.pattern = pattern
+        self.text = text
         self.filename_regex = filename_regex
         self.no_regex = no_regex
         self.verbose = verbose
@@ -161,18 +162,11 @@ class ReplaceRecursive:
         else:
             self.regex = None
 
-    def str_to_bytes(self, my_string):
-        try:
-            return bytes(my_string)
-        except UnicodeError as exc:
-            raise UnicodeError('Failed to convert to bytes: %r. Exception: %s' % (my_string, exc))
-
     def do(self, dirname, follow_symlink_files=None):
         if follow_symlink_files is None:
             follow_symlink_files = []
         if isinstance(dirname, (tuple, list)):
             for dir_name in dirname:
-                assert isinstance(dir_name, basestring), repr(dir_name)
                 self.do(dir_name)
             return self.counter
         if (not dirname in follow_symlink_files) and os.path.islink(dirname):
@@ -225,7 +219,7 @@ class ReplaceRecursive:
             print('Opening %s' % file_name)
         self.counter['files-checked'] += 1
         counter_start = self.counter['lines']
-        with open(file_name, 'rb') as fd:
+        with io.open(file_name, 'r') as fd:
             if self.dotall:
                 new_file_content = self.do_file__dot_all(fd)
             else:
@@ -257,7 +251,7 @@ class ReplaceRecursive:
             line_replaced = self.replace_one_line(line, file_name)
             new_file_content.append(line_replaced)
 
-        return b''.join(new_file_content)
+        return ''.join(new_file_content)
 
     def replace_one_line(self, line, file_name):
         if self.no_regex:
@@ -293,7 +287,7 @@ class ReplaceRecursive:
         counter_now = self.counter['lines']
         self.counter['files'] += 1
         temp = '%s_%s' % (file_name, random.randint(100000, 999999))
-        with open(temp, 'wb') as fd:
+        with io.open(temp, 'w') as fd:
             fd.write(out)
         # os.rename: single system call, so no
         # half written files will exist if to process gets
@@ -309,7 +303,7 @@ class ReplaceRecursive:
 
     def file_has_ending_to_ignore(self, file_name):
         for ending in self.file_endings_to_ignore:
-            if file_name.endswith(bytes(ending)):
+            if file_name.endswith(ending):
                 if not self.no_skip_message:
                     print('Skipping', file_name)
                 return True
@@ -427,7 +421,7 @@ def main():
             if arg == '-':
                 files_from = sys.stdin
             else:
-                files_from = open(arg)
+                files_from = io.open(arg)
         elif opt == '--ignore':
             ignore_lines.append(re.compile(arg))
         elif opt == '--no-skip-message':
@@ -489,8 +483,8 @@ def diffdir(tempdir, shoulddir):
             assert os.path.isdir(should)
             diffdir(file_name, should)
         else:
-            data_is = open(file_name).read()
-            data_should = open(should).read()
+            data_is = io.open(file_name).read()
+            data_should = io.open(should).read()
             if data_is != data_should:
                 raise Exception('Files different: %s %s' % (file_name, should))
             else:
@@ -529,11 +523,11 @@ def unittest_no_regex():
         file_name = os.path.join(tempdir, str(i))
         with codecs.open(file_name, 'w', 'utf8') as fd:
             fd.write(data_start)
-    counter = replace_recursive([tempdir], b'ü', b'ö', no_regex=True)
+    counter = replace_recursive([tempdir], 'ü', 'ö', no_regex=True)
     assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}, counter
     shoulddir = tempfile.mktemp(prefix='reprec_unittest_should')
     os.mkdir(shoulddir)
-    result_should = 'abcdefg ö\n'
+    result_should = 'abcdefg \xf6\n'
     for i in range(10):
         file_name = os.path.join(shoulddir, str(i))
         with codecs.open(file_name, 'w', 'utf8') as fd:

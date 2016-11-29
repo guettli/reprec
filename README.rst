@@ -8,7 +8,7 @@ https://github.com/guettli/reprec
 Tools
 =====
 
-Up to now there are these tools
+Up to now there are these tools:
 
  * reprec: Replace strings in text files. Can work recursive in a directory tree
  * setops: Set operations (union, intersection, ...) for line based files.

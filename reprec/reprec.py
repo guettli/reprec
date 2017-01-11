@@ -230,7 +230,7 @@ class ReplaceRecursive:
         while True:
             try:
                 line = fd.readline()
-            except UnicodeError, exc:
+            except UnicodeError as exc:
                 print('File %s: %s' % (file_name, exc))
                 raise
             if not line:

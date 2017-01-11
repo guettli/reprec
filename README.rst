@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/guettli/reprec.svg?branch=master
+    :target: https://travis-ci.org/guettli/reprec
+    
 Text tools
 ==========
 

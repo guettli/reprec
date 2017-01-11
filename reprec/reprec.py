@@ -228,7 +228,11 @@ class ReplaceRecursive:
     def do_file__not_dot_all(self, fd, file_name):
         new_file_content = []
         while True:
-            line = fd.readline()
+            try:
+                line = fd.readline()
+            except UnicodeError, exc:
+                print('File %s: %s' % (file_name, exc))
+                raise
             if not line:
                 break
             ignore_this_line = False

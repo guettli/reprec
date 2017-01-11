@@ -28,7 +28,6 @@ def usage():
              [--novcexclude]
              [--files-from file|-]
              [--ignore regex]
-             [--no-skip-message]
 
              dirs
 
@@ -66,8 +65,6 @@ def usage():
         ignore:      Ignore lines that match a regular expression.
                      This options can be given several times.
 
-        no-skip-message: Don't print 'Skipping ...'
-
         Example:
          %s --pattern '(xml)' --insert '\\1\\1' .
          -->This will replace all 'xml' with 'xmlxml'
@@ -96,8 +93,7 @@ def usage():
 def replace_recursive(dirname, pattern, text, filename_regex=None,
                       no_regex=None, verbose=False,
                       dotall=False, print_lines=False, novcexclude=False, ask=False,
-                      files_from=None, ignorecase=False, ignore_lines=None, no_skip_message=False
-                      ):
+                      files_from=None, ignorecase=False, ignore_lines=None):
     if ignore_lines is None:
         ignore_lines = []
     if ask and files_from:
@@ -107,14 +103,14 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
 
     rr = ReplaceRecursive(pattern, text, filename_regex,
                           no_regex, verbose, dotall,
-                          print_lines, novcexclude, ask, ignorecase, ignore_lines, no_skip_message)
+                          print_lines, novcexclude, ask, ignorecase, ignore_lines)
 
     if files_from:
         assert not dirname, dirname
         for line in files_from:
             file_name = line.rstrip()
             if os.path.isdir(file_name):
-                if not rr.no_skip_message:
+                if rr.verbose:
                     print('Skipping', file_name)
                 continue
             rr.do(file_name, follow_symlink_files=[file_name])
@@ -127,8 +123,7 @@ class ReplaceRecursive:
     def __init__(self, pattern, text, filename_regex=None,
                  no_regex=None, verbose=False,
                  dotall=False, print_lines=False, novcexclude=False, ask=False,
-                 ignorecase=False, ignore_lines=None, no_skip_message=False,
-                 ):
+                 ignorecase=False, ignore_lines=None):
         if ignore_lines is None:
             ignore_lines = []
         self.pattern = pattern
@@ -142,7 +137,6 @@ class ReplaceRecursive:
         self.ask = ask
         self.ignorecase = ignorecase
         self.ignore_lines = ignore_lines
-        self.no_skip_message = no_skip_message
 
         self.counter = {'dirs': 0, 'files': 0, 'lines': 0, 'files-checked': 0}
         self.exit_after_this_file = False
@@ -170,7 +164,7 @@ class ReplaceRecursive:
                 self.do(dir_name)
             return self.counter
         if (not dirname in follow_symlink_files) and os.path.islink(dirname):
-            if not self.no_skip_message:
+            if self.verbose:
                 print('Skipping symbolic link %s' % dirname)
             return self.counter
         if os.path.isdir(dirname):
@@ -186,13 +180,13 @@ class ReplaceRecursive:
             if isdir:
                 file_name = os.path.join(dirname, file_name)
             if (not file_name in follow_symlink_files) and os.path.islink(file_name):
-                if not self.no_skip_message:
+                if self.verbose:
                     print('Skipping symbolic link %s' % file_name)
                 continue
             if os.path.isdir(file_name):
                 if (not self.novcexclude) and os.path.basename(file_name) in ['.svn', 'CVS', '.git', '.hg', '.bzr',
                                                                               '.idea']:
-                    if not self.no_skip_message:
+                    if self.verbose:
                         print('Skipping', file_name)
                     continue
                 self.do(file_name)
@@ -304,7 +298,7 @@ class ReplaceRecursive:
     def file_has_ending_to_ignore(self, file_name):
         for ending in self.file_endings_to_ignore:
             if file_name.endswith(ending):
-                if not self.no_skip_message:
+                if self.verbose:
                     print('Skipping', file_name)
                 return True
         return False
@@ -375,7 +369,7 @@ def main():
                                     'dotall', 'ignorecase',
                                     'test', 'novcexclude', 'ask', 'files-from=',
                                     'ignore=',
-                                    'no-skip-message'])
+                                    ])
     except getopt.GetoptError as e:
         usage()
         print(e)
@@ -392,7 +386,6 @@ def main():
     novcexclude = False
     ask = False
     files_from = None
-    no_skip_message = False
     ignore_lines = []
     for opt, arg in opts:
         if opt in ['--pattern', '-p']:
@@ -424,8 +417,6 @@ def main():
                 files_from = io.open(arg)
         elif opt == '--ignore':
             ignore_lines.append(re.compile(arg))
-        elif opt == '--no-skip-message':
-            no_skip_message = True
         else:
             raise Exception('There is a typo in this if ... elif ...: %s %s' % (opt, arg))
 
@@ -457,8 +448,7 @@ def main():
     counter = replace_recursive(args, pattern, text, filename_regex, no_regex,
                                 verbose=verbose, dotall=dotall,
                                 print_lines=print_lines, novcexclude=novcexclude, ask=ask,
-                                files_from=files_from, ignorecase=ignorecase, ignore_lines=ignore_lines,
-                                no_skip_message=no_skip_message)
+                                files_from=files_from, ignorecase=ignorecase, ignore_lines=ignore_lines)
     dirs = counter['dirs']
     files = counter['files']
     lines = counter['lines']

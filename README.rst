@@ -33,7 +33,6 @@ The tool reprec replaces strings in text files::
          [--novcexclude]
          [--files-from file|-]
          [--ignore regex]
-         [--no-skip-message]
 
          dirs
 
@@ -70,8 +69,6 @@ The tool reprec replaces strings in text files::
 
     ignore:      Ignore lines that match a regular expression.
                  This options can be given several times.
-
-    no-skip-message: Don't print 'Skipping ...'
 
     Example:
      reprec --pattern '(xml)' --insert '\1\1' .

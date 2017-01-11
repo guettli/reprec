@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import io
-
 import codecs
 import getopt
+import io
 import os
 import random
 import re
 import shutil
 import sys
 import tempfile
+
 
 def usage():
     print('''Usage: %s

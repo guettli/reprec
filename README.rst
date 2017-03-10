@@ -1,8 +1,8 @@
 .. image:: https://travis-ci.org/guettli/reprec.svg?branch=master
     :target: https://travis-ci.org/guettli/reprec
     
-reprec: Text tools
-==================
+Text Tools: Recursively replace strings in files and other goodies
+==================================================================
 
 Command line tool for text files.
 

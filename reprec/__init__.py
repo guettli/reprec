@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import codecs
 import getopt
 import io
 import os
 import random
 import re
-import shutil
 import sys
-import tempfile
 
 
 def usage():
@@ -24,7 +21,6 @@ def usage():
              [--print-lines]
              [--dotall]
              [--ignorecase]
-             [--test]
              [--novcexclude]
              [--files-from file|-]
              [--ignore regex]
@@ -51,8 +47,6 @@ def usage():
                      Not supported with --ask and --print-lines.
 
         ignorecase:  ...
-
-        test:    Run the test. No other arguments are allowed.
 
         novcexclude: Don't exclude the directories called '.svn' or 'CVS'.
                      By default they get ignored.
@@ -371,7 +365,7 @@ def main():
                                     'verbose', 'print-lines',
                                     'filename=',
                                     'dotall', 'ignorecase',
-                                    'test', 'novcexclude', 'ask', 'files-from=',
+                                    'novcexclude', 'ask', 'files-from=',
                                     'ignore=',
                                     ])
     except getopt.GetoptError as e:
@@ -385,7 +379,6 @@ def main():
     verbose = False
     dotall = False
     ignorecase = False
-    test = None
     print_lines = False
     novcexclude = False
     ask = False
@@ -406,8 +399,6 @@ def main():
             dotall = True
         elif opt == '--ignorecase':
             ignorecase = True
-        elif opt == '--test':
-            test = True
         elif opt == '--print-lines':
             print_lines = True
         elif opt == '--novcexclude':
@@ -424,11 +415,6 @@ def main():
         else:
             raise Exception('There is a typo in this if ... elif ...: %s %s' % (opt, arg))
 
-    if test:
-        if len(opts) != 1 or args:
-            print('--test allows no other args.')
-            sys.exit(1)
-        return unittest()
     if (not pattern) and (not text) and len(args) > 1:
         pattern = args[0]
         text = args[1]

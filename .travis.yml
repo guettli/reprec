@@ -1,11 +1,26 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
+- '2.7'
 install:
-  - python setup.py install
-script:
-  - python test.py
-branches:
-  only:
-    - master
+- pip install .
+- pip install -r requirements.txt
+script: pytest
+after_success:
+- git config --global user.email "bumpversion-after-ci@example.com"
+- git config --global user.name "Bumpversion after CI"
+- bumpversion --verbose minor
+- chmod 600 travis_deploy_key
+- eval `ssh-agent -s`
+- ssh-add travis_deploy_key
+- git config --global push.default simple
+- git remote add deploy $(git remote -v | sed -nre 's#^origin.*https://([^/]*)/([^
+  ]*) *.*push.*#git@\1:\2#p')
+- git push deploy HEAD:master
+- python setup.py sdist
+- pip install twine
+- twine upload --config-file .pypirc-guettlibot dist/*
+before_install:
+- curl https://thomas-guettler.de/travis/$encrypted_c096724ab55d_key/$encrypted_c096724ab55d_iv
+- openssl aes-256-cbc -K $encrypted_c096724ab55d_key -iv $encrypted_c096724ab55d_iv
+  -in secret-files.tar.enc -out secret-files.tar -d
+- tar xvf secret-files.tar

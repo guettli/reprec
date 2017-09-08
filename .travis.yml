@@ -20,7 +20,6 @@ after_success:
 - pip install twine
 - twine upload --config-file .pypirc-guettlibot dist/*
 before_install:
-- curl https://thomas-guettler.de/travis/$encrypted_c096724ab55d_key/$encrypted_c096724ab55d_iv
-- openssl aes-256-cbc -K $encrypted_c096724ab55d_key -iv $encrypted_c096724ab55d_iv
+- openssl aes-256-cbc -K $encrypted_5870e821e6e0_key -iv $encrypted_5870e821e6e0_iv
   -in secret-files.tar.enc -out secret-files.tar -d
 - tar xvf secret-files.tar

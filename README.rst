@@ -101,6 +101,9 @@ The tool setops provides set operations (union, intersection, ...) for line base
       difference Aliases: - minus
       symmetric_difference Aliases: ^
 
+    Example: Show all files in directory "a" which are not in directory "b": 
+    setops <(cd a; find ) - <(cd b; find )
+
     positional arguments:
       set1
       operator

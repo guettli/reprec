@@ -43,7 +43,12 @@ def string_to_operator(string_value):
 
 
 def description():
-    return 'Operators: \n%s' % ('\n'.join(['  %s Aliases: %s' % (
+    return '''Operators: \n%s
+
+Example: Show all files in directory "a" which are not in directory "b": 
+setops <(cd a; find ) - <(cd b; find )
+
+    ''' % ('\n'.join(['  %s Aliases: %s' % (
         operator.name_of_set_operation,
 
         ' '.join(operator.aliases)) for operator in operators]))

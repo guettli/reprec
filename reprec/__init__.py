@@ -294,7 +294,7 @@ class ReplaceRecursive:
             print('Changed %s lines in %s' % (
                 counter_now - counter_start, file_name))
 
-    file_endings_to_ignore = [b'~', b'.pyc', b'.db']
+    file_endings_to_ignore = [b'~', b'.pyc', b'.db', '.gz', '.tgz', '.tar']
 
     def file_has_ending_to_ignore(self, file_name):
         for ending in self.file_endings_to_ignore:

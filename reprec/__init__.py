@@ -225,7 +225,9 @@ class ReplaceRecursive:
             try:
                 line = fd.readline()
             except UnicodeError as exc:
-                print('File %s: %s' % (file_name, exc))
+                unicode_error_hint(exc)
+                print('File %s: %s <===========' % (file_name, exc))
+                print('Hint: %s <==========' % unicode_error_hint(exc))
                 raise
             if not line:
                 break
@@ -512,6 +514,9 @@ class _GetchWindows:
 
 getch = _Getch()
 ### Ende copy
+
+def unicode_error_hint(exc):
+    return exc.object[max(exc.start-15, 0):min(exc.end+15, len(exc.object))]
 
 if __name__ == '__main__':
     main()

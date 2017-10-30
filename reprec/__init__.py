@@ -278,11 +278,11 @@ class ReplaceRecursive:
             self.counter['lines'] += n
         return new_file_content
 
-    def update_file(self, file_name, out, counter_start):
+    def update_file(self, file_name, out, counter_start=0):
         counter_now = self.counter['lines']
         self.counter['files'] += 1
         temp = '%s_%s' % (file_name, random.randint(100000, 999999))
-        with io.open(temp, 'w') as fd:
+        with io.open(temp, 'w', encoding='utf8') as fd:
             fd.write(out)
         # os.rename: single system call, so no
         # half written files will exist if to process gets

@@ -14,7 +14,7 @@ setup(
 
     # Updated via travisd: https://travis-ci.org/guettli/reprec
     # See .travis.yml
-    version='2017.21.0',
+    version='2017.22.0',
 
     description='reprec: Recursively replace strings in files and other goodies',
     long_description=long_description,

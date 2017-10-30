@@ -227,7 +227,7 @@ class ReplaceRecursive:
             except UnicodeError as exc:
                 unicode_error_hint(exc)
                 print('File %s: %s <===========' % (file_name, exc))
-                print('Hint: %s <==========' % unicode_error_hint(exc))
+                print('Hint: %r <==========' % unicode_error_hint(exc))
                 raise
             if not line:
                 break

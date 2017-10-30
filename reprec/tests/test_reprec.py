@@ -8,7 +8,7 @@ import unittest
 import os
 
 import shutil
-from reprec import replace_recursive
+from reprec import replace_recursive, unicode_error_hint
 from reprec import diffdir
 from reprec import ReplaceRecursive
 
@@ -68,3 +68,11 @@ class MyTestCase(unittest.TestCase):
         assert reprec.file_has_ending_to_ignore('foo.pyc')
         print('unittest_file_has_ending_to_ignore: OK')
 
+
+    def test_unicode_error_hint(self):
+        try:
+            'before-ü-after'.encode('latin1').decode('utf8')
+        except UnicodeError as exc:
+            self.assertEqual(b'before-\xfc-after', unicode_error_hint(exc))
+            return
+        raise Exception('No unicode error?')

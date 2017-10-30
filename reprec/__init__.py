@@ -207,7 +207,7 @@ class ReplaceRecursive:
             print('Opening %s' % file_name)
         self.counter['files-checked'] += 1
         counter_start = self.counter['lines']
-        with io.open(file_name, 'r') as fd:
+        with io.open(file_name, 'r', encoding='utf8') as fd:
             if self.dotall:
                 new_file_content = self.do_file__dot_all(fd)
             else:
@@ -227,6 +227,7 @@ class ReplaceRecursive:
             except UnicodeError as exc:
                 unicode_error_hint(exc)
                 print('File %s: %s <===========' % (file_name, exc))
+                print('Encoding: %s' % exc.encoding)
                 print('Hint: %r <==========' % unicode_error_hint(exc))
                 raise
             if not line:

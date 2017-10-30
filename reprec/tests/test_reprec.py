@@ -76,3 +76,20 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(b'before-\xfc-after', unicode_error_hint(exc))
             return
         raise Exception('No unicode error?')
+
+
+    def test_do_file_utf8(self):
+        reprec = ReplaceRecursive('e', '_')
+        temp = tempfile.mktemp(prefix=self.id())
+        with open(temp, 'wb') as fd:
+            fd.write('before-ü-after\n'.encode('utf8'))
+        reprec.do_file(temp)
+        self.assertEqual(b'b_for_-\xc3\xbc-aft_r\n', open(temp).read())
+
+    def test_do_file_latin1(self):
+        # Up to now latin1 is not supported. Feel free to improve this
+        reprec = ReplaceRecursive('e', '_')
+        temp = tempfile.mktemp(prefix=self.id())
+        with open(temp, 'wb') as fd:
+            fd.write('before-ü-after\n'.encode('latin1'))
+        self.assertRaises(UnicodeDecodeError, reprec.do_file, temp)

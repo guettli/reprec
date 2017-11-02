@@ -121,7 +121,7 @@ class ReplaceRecursive:
         if ignore_lines is None:
             ignore_lines = []
         self.pattern = pattern
-        self.text = text
+        self.text = bytes(text)
         self.filename_regex = filename_regex
         self.no_regex = no_regex
         self.verbose = verbose
@@ -207,7 +207,7 @@ class ReplaceRecursive:
             print('Opening %s' % file_name)
         self.counter['files-checked'] += 1
         counter_start = self.counter['lines']
-        with io.open(file_name, 'r', encoding='utf8') as fd:
+        with io.open(file_name, 'rb') as fd:
             if self.dotall:
                 new_file_content = self.do_file__dot_all(fd)
             else:
@@ -246,7 +246,7 @@ class ReplaceRecursive:
             line_replaced = self.replace_one_line(line, file_name)
             new_file_content.append(line_replaced)
 
-        return ''.join(new_file_content)
+        return b''.join(new_file_content)
 
     def replace_one_line(self, line, file_name):
         if self.no_regex:
@@ -282,7 +282,7 @@ class ReplaceRecursive:
         counter_now = self.counter['lines']
         self.counter['files'] += 1
         temp = '%s_%s' % (file_name, random.randint(100000, 999999))
-        with io.open(temp, 'w', encoding='utf8') as fd:
+        with io.open(temp, 'wb') as fd:
             fd.write(out)
         # os.rename: single system call, so no
         # half written files will exist if to process gets

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import codecs
+import io
 import tempfile
 import unittest
 
@@ -47,7 +48,7 @@ class MyTestCase(unittest.TestCase):
             file_name = os.path.join(tempdir, str(i))
             with codecs.open(file_name, 'w', 'utf8') as fd:
                 fd.write(data_start)
-        counter = replace_recursive([tempdir], 'ü', 'ö', no_regex=True)
+        counter = replace_recursive([tempdir], b'ü', b'ö', no_regex=True)
         assert counter == {'dirs': 1, 'files': 10, 'lines': 10, 'files-checked': 10}, counter
         shoulddir = tempfile.mktemp(prefix='reprec_unittest_should')
         os.mkdir(shoulddir)
@@ -84,12 +85,12 @@ class MyTestCase(unittest.TestCase):
         with open(temp, 'wb') as fd:
             fd.write('before-ü-after\n'.encode('utf8'))
         reprec.do_file(temp)
-        self.assertEqual(b'b_for_-\xc3\xbc-aft_r\n', open(temp).read())
+        self.assertEqual(u'b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='utf8').read())
 
     def test_do_file_latin1(self):
-        # Up to now latin1 is not supported. Feel free to improve this
         reprec = ReplaceRecursive('e', '_')
         temp = tempfile.mktemp(prefix=self.id())
         with open(temp, 'wb') as fd:
-            fd.write('before-ü-after\n'.encode('latin1'))
-        self.assertRaises(UnicodeDecodeError, reprec.do_file, temp)
+            fd.write(u'before-ü-after\n'.encode('latin1'))
+        reprec.do_file(temp)
+        self.assertEqual(u'b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='latin1').read())

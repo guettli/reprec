@@ -120,8 +120,15 @@ class ReplaceRecursive:
                  ignorecase=False, ignore_lines=None):
         if ignore_lines is None:
             ignore_lines = []
-        self.pattern = pattern
+
+        if not isinstance(pattern, bytes):
+            raise ValueError('I need bytes. Unfortunately not nice high level unicode strings: %r' % pattern)
+        self.pattern = bytes(pattern)
+
+        if not isinstance(text, bytes):
+            raise ValueError('I need bytes. Unfortunately not nice high level unicode strings: %r' % text)
         self.text = bytes(text)
+
         self.filename_regex = filename_regex
         self.no_regex = no_regex
         self.verbose = verbose
@@ -294,7 +301,7 @@ class ReplaceRecursive:
             print('Changed %s lines in %s' % (
                 counter_now - counter_start, file_name))
 
-    file_endings_to_ignore = [b'~', b'.pyc', b'.db', '.gz', '.tgz', '.tar']
+    file_endings_to_ignore = ['~', '.pyc', '.db', '.gz', '.tgz', '.tar']
 
     def file_has_ending_to_ignore(self, file_name):
         for ending in self.file_endings_to_ignore:

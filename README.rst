@@ -101,8 +101,12 @@ The tool setops provides set operations (union, intersection, ...) for line base
       difference Aliases: - minus
       symmetric_difference Aliases: ^
 
-    Example: Show all files in directory "a" which are not in directory "b": 
+    Example 1: Show all files in directory "a" which are not in directory "b": 
     setops <(cd a; find ) - <(cd b; find )
+
+    Example 2: Show file which do not containt "foo"
+    setops <(ls -1 mydir/*.txt) - <(grep -l mydir/*.txt)
+
 
     positional arguments:
       set1

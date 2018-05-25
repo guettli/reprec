@@ -66,6 +66,8 @@ class MyTestCase(unittest.TestCase):
         assert not reprec.file_has_ending_to_ignore('foo.py')
         assert reprec.file_has_ending_to_ignore('foo.pyc')
 
+    def test_file_has_ending_to_ignore__unicode(self):
+        ReplaceRecursive._file_has_ending_to_ignore(b'umlaut-ü.pdf', [u'.gz'])
 
     def test_unicode_error_hint(self):
         try:

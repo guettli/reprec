@@ -304,9 +304,13 @@ class ReplaceRecursive:
     file_endings_to_ignore = ['~', '.pyc', '.db', '.gz', '.tgz', '.tar']
 
     def file_has_ending_to_ignore(self, file_name):
-        for ending in self.file_endings_to_ignore:
-            if file_name.endswith(ending):
-                if self.verbose:
+        return self._file_has_ending_to_ignore(file_name, self.file_endings_to_ignore, self.verbose)
+
+    @classmethod
+    def _file_has_ending_to_ignore(cls, file_name, file_endings_to_ignore, verbose=False):
+        for ending in file_endings_to_ignore:
+            if file_name.endswith(str(ending)):
+                if verbose:
                     print('Skipping', file_name)
                 return True
         return False

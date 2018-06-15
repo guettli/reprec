@@ -95,17 +95,28 @@ The tool setops provides set operations (union, intersection, ...) for line base
 
     usage: setops [-h] set1 operator set2
 
-    Operators: 
+    Operators:
       union Aliases: | + or
       intersection Aliases: & and
       difference Aliases: - minus
       symmetric_difference Aliases: ^
 
-    Example 1: Show all files in directory "a" which are not in directory "b": 
+    Examples
+
+    #Show all files in directory "a" which are not in directory "b":
     setops <(cd a; find ) - <(cd b; find )
 
-    Example 2: Show file which do not containt "foo"
-    setops <(ls -1 mydir/*.txt) - <(grep -l mydir/*.txt)
+    # Create some files for testing
+    echo foo > foo.txt
+    echo bar > bar.txt
+    echo foobar > foobar.txt
+
+    # All files minus files containing "foo"
+    user@host$ setops <(ls *.txt) - <(grep -l foo *.txt)
+
+    # All files containing "foo" or "bar" minus files which contain "foobar"
+    setops <(setops <(grep -l bar *.txt) + <(grep -l foo *.txt)) - <(grep -l foobar *.txt)
+
 
 
     positional arguments:
@@ -115,5 +126,3 @@ The tool setops provides set operations (union, intersection, ...) for line base
 
     optional arguments:
       -h, --help  show this help message and exit
-
-

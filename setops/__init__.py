@@ -45,12 +45,23 @@ def string_to_operator(string_value):
 def description():
     return '''Operators: \n%s
 
-Example 1: Show all files in directory "a" which are not in directory "b": 
+Examples
+
+#Show all files in directory "a" which are not in directory "b": 
 setops <(cd a; find ) - <(cd b; find )
 
-Example 2: Show file which do not containt "foo"
 
-setops <(ls -1 mydir/*.txt) - <(grep -l mydir/*.txt)
+
+# Create some files for testing
+echo foo > foo.txt
+echo bar > bar.txt
+echo foobar > foobar.txt
+
+# All files minus files containing "foo"
+user@host$ setops <(ls *.txt) - <(grep -l foo *.txt)
+
+# All files containing "foo" or "bar" minus files which contain "foobar"
+setops <(setops <(grep -l bar *.txt) + <(grep -l foo *.txt)) - <(grep -l foobar *.txt)
 
     ''' % ('\n'.join(['  %s Aliases: %s' % (
         operator.name_of_set_operation,

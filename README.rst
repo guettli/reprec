@@ -126,3 +126,10 @@ The tool setops provides set operations (union, intersection, ...) for line base
 
     optional arguments:
       -h, --help  show this help message and exit
+
+Install
+=======
+
+Install for usage from `pypi <https://pypi.python.org/pypi/reprec/>`_::
+
+    pip install reprec

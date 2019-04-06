@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, unicode_literals, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import getopt
 import io
@@ -525,10 +525,13 @@ class _GetchWindows:
 
 
 getch = _Getch()
+
+
 ### Ende copy
 
 def unicode_error_hint(exc):
-    return exc.object[max(exc.start-15, 0):min(exc.end+15, len(exc.object))]
+    return exc.object[max(exc.start - 15, 0):min(exc.end + 15, len(exc.object))]
+
 
 if __name__ == '__main__':
     main()

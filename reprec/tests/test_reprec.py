@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, unicode_literals, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import codecs
 import io
+import os
+import shutil
 import tempfile
 import unittest
 
-import os
-
-import shutil
-from reprec import replace_recursive, unicode_error_hint
-from reprec import diffdir
-from reprec import ReplaceRecursive
+from reprec import ReplaceRecursive, diffdir, replace_recursive, unicode_error_hint
 
 
 class MyTestCase(unittest.TestCase):
-
 
     def test_with_regex(self):
         tempdir = tempfile.mktemp(prefix='reprec_unittest_dir')
@@ -38,7 +34,6 @@ class MyTestCase(unittest.TestCase):
         shutil.rmtree(tempdir)
         shutil.rmtree(shoulddir)
 
-
     def test_no_regex(self):
         tempdir = tempfile.mktemp(prefix='reprec_unittest')
         os.mkdir(tempdir)
@@ -60,14 +55,13 @@ class MyTestCase(unittest.TestCase):
         shutil.rmtree(tempdir)
         shutil.rmtree(shoulddir)
 
-
     def test_file_has_ending_to_ignore(self):
         reprec = ReplaceRecursive(b'pattern', b'insert')
         assert not reprec.file_has_ending_to_ignore('foo.py')
         assert reprec.file_has_ending_to_ignore('foo.pyc')
 
     def test_file_has_ending_to_ignore__unicode(self):
-        ReplaceRecursive._file_has_ending_to_ignore(b'umlaut-ü.pdf', [u'.gz'])
+        ReplaceRecursive._file_has_ending_to_ignore('umlaut-ü.pdf', ['.gz'])
 
     def test_unicode_error_hint(self):
         try:
@@ -77,19 +71,18 @@ class MyTestCase(unittest.TestCase):
             return
         raise Exception('No unicode error?')
 
-
     def test_do_file_utf8(self):
         reprec = ReplaceRecursive(b'e', b'_')
         temp = tempfile.mktemp(prefix=self.id())
         with open(temp, 'wb') as fd:
             fd.write('before-ü-after\n'.encode('utf8'))
         reprec.do_file(temp)
-        self.assertEqual(u'b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='utf8').read())
+        self.assertEqual('b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='utf8').read())
 
     def test_do_file_latin1(self):
         reprec = ReplaceRecursive(b'e', b'_')
         temp = tempfile.mktemp(prefix=self.id())
         with open(temp, 'wb') as fd:
-            fd.write(u'before-ü-after\n'.encode('latin1'))
+            fd.write('before-ü-after\n'.encode('latin1'))
         reprec.do_file(temp)
-        self.assertEqual(u'b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='latin1').read())
+        self.assertEqual('b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='latin1').read())

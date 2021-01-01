@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import subprocess
 
 from reprec import ReplaceRecursive, diffdir, replace_recursive, unicode_error_hint
 
@@ -86,3 +87,10 @@ class MyTestCase(unittest.TestCase):
             fd.write('before-ü-after\n'.encode('latin1'))
         reprec.do_file(temp)
         self.assertEqual('b_for_-ü-aft_r\n', io.open(temp, 'rt', encoding='latin1').read())
+
+    def test_call_via_shell(self):
+        dummy = tempfile.mktemp(prefix='test_call_via_shell')
+        with open(dummy, 'wt') as fd:
+            fd.write('foo')
+        subprocess.check_call(['reprec', 'foo', 'bar', dummy])
+

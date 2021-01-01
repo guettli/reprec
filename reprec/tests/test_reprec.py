@@ -93,4 +93,4 @@ class MyTestCase(unittest.TestCase):
         with open(dummy, 'wt') as fd:
             fd.write('foo')
         subprocess.check_call(['reprec', 'foo', 'bar', dummy])
-
+        self.assertEqual('bar', open(dummy).read())

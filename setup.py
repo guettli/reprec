@@ -13,7 +13,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='reprec',
 
-    # Updated via travisd: https://travis-ci.org/guettli/reprec
+    # Updated via travisd: https://travis-ci.com/guettli/reprec
     # See .travis.yml
     version='2021.31.0',
 

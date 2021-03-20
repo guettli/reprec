@@ -1,6 +1,3 @@
-.. image:: https://travis-ci.com/guettli/reprec.svg?branch=master
-    :target: https://travis-ci.com/guettli/reprec
-    
 reprec: Recursively replace strings in files and other goodies
 ==================================================================
 

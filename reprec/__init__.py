@@ -96,9 +96,10 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
         raise Exception("You can't use --dotall and --ignore together")
 
     if isinstance(pattern, str):
-        pattern = bytes(pattern, 'utf8')
+        pattern = pattern.encode('utf8')
     if isinstance(text, str):
-        text = bytes(text, 'utf8')
+        text = text.encode('utf8')
+    
     rr = ReplaceRecursive(pattern, text, filename_regex,
                           no_regex, verbose, dotall,
                           print_lines, novcexclude, ask, ignorecase, ignore_lines)

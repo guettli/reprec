@@ -15,7 +15,7 @@ setup(
 
     # Updated via travisd: https://travis-ci.com/guettli/reprec
     # See .travis.yml
-    version='2021.33.0',
+    version='2022.3.0',
 
     description='reprec: Recursively replace strings in files and other goodies',
     long_description=long_description,
@@ -46,11 +46,12 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 
     packages=setuptools.find_packages(),

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euxo pipefail
 rm -f dist/*
-pytest
+python -m pytest
 bumpversion --verbose minor
 python setup.py sdist
 pip install twine

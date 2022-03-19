@@ -9,6 +9,9 @@ import random
 import re
 import sys
 
+STD_EXCLUDES = ['.svn', 'CVS', '.git', '.hg', '.bzr',
+                '.idea', '.tox', 'dist']
+
 
 def usage():
     print('''Usage: %s
@@ -21,9 +24,10 @@ def usage():
              [--print-lines]
              [--dotall]
              [--ignorecase]
-             [--novcexclude]
+             [--no-std-exclude]
              [--files-from file|-]
              [--ignore regex]
+             [--print-std-exclude]
 
              dirs
 
@@ -48,7 +52,7 @@ def usage():
 
         ignorecase:  ...
 
-        novcexclude: Don't exclude the directories called '.svn' or 'CVS'.
+        no-std-exclude: Don't exclude the directories called '.git' or '.tox'.
                      By default they get ignored.
 
         ask:         Aks before replacing (interactive).
@@ -58,6 +62,9 @@ def usage():
 
         ignore:      Ignore lines that match a regular expression.
                      This options can be given several times.
+
+        print-std-exclude: print the directories which get ignored (use --no-std-exclude to 
+                     not ignore them)
 
         Example:
          %s --pattern '(xml)' --insert '\\1\\1' .
@@ -86,7 +93,7 @@ def usage():
 
 def replace_recursive(dirname, pattern, text, filename_regex=None,
                       no_regex=None, verbose=False,
-                      dotall=False, print_lines=False, novcexclude=False, ask=False,
+                      dotall=False, print_lines=False, no_std_exclude=False, ask=False,
                       files_from=None, ignorecase=False, ignore_lines=None):
     if ignore_lines is None:
         ignore_lines = []
@@ -102,7 +109,7 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
     
     rr = ReplaceRecursive(pattern, text, filename_regex,
                           no_regex, verbose, dotall,
-                          print_lines, novcexclude, ask, ignorecase, ignore_lines)
+                          print_lines, no_std_exclude, ask, ignorecase, ignore_lines)
 
     if files_from:
         assert not dirname, dirname
@@ -121,7 +128,7 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
 class ReplaceRecursive:
     def __init__(self, pattern, text, filename_regex=None,
                  no_regex=None, verbose=False,
-                 dotall=False, print_lines=False, novcexclude=False, ask=False,
+                 dotall=False, print_lines=False, no_std_exclude=False, ask=False,
                  ignorecase=False, ignore_lines=None):
         if ignore_lines is None:
             ignore_lines = []
@@ -139,7 +146,7 @@ class ReplaceRecursive:
         self.verbose = verbose
         self.dotall = dotall
         self.print_lines = print_lines
-        self.novcexclude = novcexclude
+        self.no_std_exclude = no_std_exclude
         self.ask = ask
         self.ignorecase = ignorecase
         self.ignore_lines = ignore_lines
@@ -190,8 +197,7 @@ class ReplaceRecursive:
                     print('Skipping symbolic link %s' % file_name)
                 continue
             if os.path.isdir(file_name):
-                if (not self.novcexclude) and os.path.basename(file_name) in ['.svn', 'CVS', '.git', '.hg', '.bzr',
-                                                                              '.idea']:
+                if (not self.no_std_exclude) and os.path.basename(file_name) in STD_EXCLUDES:
                     if self.verbose:
                         print('Skipping', file_name)
                     continue
@@ -384,8 +390,10 @@ def main():
                                     'verbose', 'print-lines',
                                     'filename=',
                                     'dotall', 'ignorecase',
-                                    'novcexclude', 'ask', 'files-from=',
+                                    'ask', 'files-from=',
                                     'ignore=',
+                                    'no-std-exclude',
+                                    'print-std-exclude',
                                     ])
     except getopt.GetoptError as e:
         usage()
@@ -399,7 +407,7 @@ def main():
     dotall = False
     ignorecase = False
     print_lines = False
-    novcexclude = False
+    no_std_exclude = False
     ask = False
     files_from = None
     ignore_lines = []
@@ -418,10 +426,13 @@ def main():
             dotall = True
         elif opt == '--ignorecase':
             ignorecase = True
+        elif opt == '--print-std-exclude':
+            print(', '.join(STD_EXCLUDES))
+            sys.exit(0)
         elif opt == '--print-lines':
             print_lines = True
-        elif opt == '--novcexclude':
-            novcexclude = True
+        elif opt == '--no-std-exclude':
+            no_std_exclude = True
         elif opt in ['--ask', '-a']:
             ask = True
         elif opt == '--files-from':
@@ -456,7 +467,7 @@ def main():
         sys.exit(2)
     counter = replace_recursive(args, pattern, text, filename_regex, no_regex,
                                 verbose=verbose, dotall=dotall,
-                                print_lines=print_lines, novcexclude=novcexclude, ask=ask,
+                                print_lines=print_lines, no_std_exclude=no_std_exclude, ask=ask,
                                 files_from=files_from, ignorecase=ignorecase, ignore_lines=ignore_lines)
     dirs = counter['dirs']
     files = counter['files']

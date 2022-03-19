@@ -29,9 +29,10 @@ The tool reprec replaces strings in text files::
              [--print-lines]
              [--dotall]
              [--ignorecase]
-             [--novcexclude]
+             [--no-std-exclude]
              [--files-from file|-]
              [--ignore regex]
+             [--print-std-exclude]
 
              dirs
 
@@ -56,7 +57,7 @@ The tool reprec replaces strings in text files::
 
         ignorecase:  ...
 
-        novcexclude: Don't exclude the directories called '.svn' or 'CVS'.
+        no-std-exclude: Don't exclude the directories called '.git' or '.tox'.
                      By default they get ignored.
 
         ask:         Aks before replacing (interactive).
@@ -66,6 +67,9 @@ The tool reprec replaces strings in text files::
 
         ignore:      Ignore lines that match a regular expression.
                      This options can be given several times.
+
+        print-std-exclude: print the directories which get ignored (use --no-std-exclude to
+                     not ignore them)
 
         Example:
          reprec --pattern '(xml)' --insert '\1\1' .
@@ -85,6 +89,8 @@ The tool reprec replaces strings in text files::
         to FILE. This way no half written files will be left, if the
         process gets killed. If the process gets killed one FILE_RANDOMINTEGER
         may be left in the filesystem.
+
+
 
 setops
 ======

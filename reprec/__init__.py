@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
+#!/usr/bin/env python3
 
 import getopt
 import io
@@ -37,7 +35,7 @@ def usage():
 
         insert:      Text which gets inserted
 
-        filename:    Regex matching the filename. E.g. '.*\.py'
+        filename:    Regex matching the filename. E.g. '.*\\.py'
 
         no-regex:    Normal string replacement will be used.
                      This means you can use '.', '*', '[' without quoting
@@ -63,7 +61,7 @@ def usage():
         ignore:      Ignore lines that match a regular expression.
                      This options can be given several times.
 
-        print-std-exclude: print the directories which get ignored (use --no-std-exclude to 
+        print-std-exclude: print the directories which get ignored (use --no-std-exclude to
                      not ignore them)
 
         Example:
@@ -106,7 +104,7 @@ def replace_recursive(dirname, pattern, text, filename_regex=None,
         pattern = pattern.encode('utf8')
     if isinstance(text, str):
         text = text.encode('utf8')
-    
+
     rr = ReplaceRecursive(pattern, text, filename_regex,
                           no_regex, verbose, dotall,
                           print_lines, no_std_exclude, ask, ignorecase, ignore_lines)
@@ -335,7 +333,7 @@ class ReplaceRecursive:
         print(line)
         print('with:')
         print(line_replaced)
-        if line.endswith('\n') and not line_replaced.endswith('\n'):
+        if line.endswith(b'\n') and not line_replaced.endswith(b'\n'):
             print('WARNING: Newline at the end of line was stripped!')
         while True:
             user_input = self.do_ask_one_time()

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import argparse
 
 
@@ -47,7 +45,7 @@ def description():
 
 Examples
 
-#Show all files in directory "a" which are not in directory "b": 
+#Show all files in directory "a" which are not in directory "b":
 setops <(cd a; find ) - <(cd b; find )
 
 
